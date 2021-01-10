@@ -3,13 +3,11 @@ using Microsoft.Xna.Framework;
 
 namespace RoomGenerator
 {
-    public delegate void Action();
-    public delegate void AddEater(Vector2 position);
     public class Eater
     {
         public Vector2 Direction { get; private set; }
         public Vector2 Position { get; private set; }
-        public event AddEater AddEater;
+        public event Action<Vector2> AddEater;
 
         private Random random;
 
