@@ -10,6 +10,7 @@ namespace RoomGenerator
         public event Action<Vector2> AddEater;
 
         private Random random;
+        private const int SpawnEaterChance = 400; //Higher value = less likely to spawn another.
 
         public Eater(Vector2 direction, Vector2 position)
         {
@@ -47,8 +48,8 @@ namespace RoomGenerator
                 GenerateDirection();
             }
             
-            int genNewEater = random.Next(400);
-            if (genNewEater == 0) //10% chance of adding new eater
+            int genNewEater = random.Next(SpawnEaterChance);
+            if (genNewEater == 0) //0.25% chance of adding new eater
             {
                 AddEater?.Invoke(Position); 
             }

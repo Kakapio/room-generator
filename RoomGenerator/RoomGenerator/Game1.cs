@@ -64,7 +64,8 @@ namespace RoomGenerator
             base.Update(gameTime);
             
             //Handle input
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed 
+                || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
             if (Keyboard.GetState().IsKeyDown(Keys.R))
@@ -84,6 +85,11 @@ namespace RoomGenerator
             Console.WriteLine($"Number floors created: {MaxFloors - CurrentFloors}, " +
                               $"Number Eaters: {eaters.Count}");
 
+            PrintTileCount();
+        }
+
+        private void PrintTileCount()
+        {
             int trueCount = 0;
 
             for (int i = 0; i < TileMap.GetLength(0); i++)
@@ -94,7 +100,7 @@ namespace RoomGenerator
                         trueCount++;
                 }
             }
-            
+
             Console.WriteLine($"True Count: {trueCount}");
         }
 
