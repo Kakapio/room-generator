@@ -12,9 +12,9 @@ namespace RoomGenerator
         private Random random;
         private const int SpawnEaterChance = 400; //Higher value = less likely to spawn another.
 
-        public Eater(Vector2 direction, Vector2 position)
+        public Eater(Vector2 position)
         {
-            Direction = direction;
+            GenerateDirection();
             Position = position;
             random = new Random();
         }
@@ -22,15 +22,13 @@ namespace RoomGenerator
         /// <summary>
         /// Move the Eater in its Direction by one step, remove whatever wall is in the way.
         /// </summary>
-        public void Move()
+        public void TryMove()
         {
             var newPos = Position + Direction;
 
-            if (Game1.CurrentFloors <= 0)
-                return;
-            
             //Invalid direction, change direction and return.
-            if (newPos.X < 0 || newPos.Y < 0 || newPos.X > Game1.MapSize - 1 || newPos.Y > Game1.MapSize - 1)
+            if (newPos.X < 0 || newPos.Y < 0 
+                             || newPos.X > RoomGenerator.MapSize - 1 || newPos.Y > RoomGenerator.MapSize - 1)
             {
                 GenerateDirection();
                 return;
@@ -38,18 +36,14 @@ namespace RoomGenerator
 
             Position = newPos;
             
-            if (Game1.TileMap[(int) Position.X, (int) Position.Y] != Game1.TileType.Floor)
+            if (RoomGenerator.TileMap[(int) Position.X, (int) Position.Y] != RoomGenerator.TileType.Floor)
             {
-                Game1.TileMap[(int) Position.X, (int) Position.Y] = Game1.TileType.Floor;
-                Game1.CurrentFloors--;
+                RoomGenerator.TileMap[(int) Position.X, (int) Position.Y] = RoomGenerator.TileType.Floor;
+                RoomGenerator.CurrentFloors--;
             }
-            else
-            {
-                GenerateDirection();
-            }
-            
+
             int genNewEater = random.Next(SpawnEaterChance);
-            if (genNewEater == 0) //0.25% chance of adding new eater
+            if (genNewEater == 0) // 1/SpawnEaterChance of spawning new eater.
             {
                 AddEater?.Invoke(Position); 
             }

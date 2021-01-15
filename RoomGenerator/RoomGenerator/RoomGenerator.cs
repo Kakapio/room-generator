@@ -7,20 +7,20 @@ using Microsoft.Xna.Framework.Input;
 
 namespace RoomGenerator
 {
-    public class Game1 : Game
+    public class RoomGenerator : Game
     {
         public enum TileType
         {
             Floor,
             Wall
         }
-        
+
         //Variables that are accessed by the eater class.
         public static TileType[,] TileMap { get; set; }
+        public static int CurrentFloors = MaxFloors;
         public const int MapSize = 100; //The square dimensions of the tile map in terms of tiles.
-        public const int MaxFloors = 1200;
-        public static int CurrentFloors { get; set; } = MaxFloors;
         
+        private const int MaxFloors = 1200;
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
         private List<Eater> eaters;
@@ -29,7 +29,13 @@ namespace RoomGenerator
         private Texture2D wall;
         private const int TileSize = 8; //The square dimensions of each tile sprite.
         
-        public Game1()
+        //Properties for cleaner code
+        private bool ExitRequested => GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed
+                                      || Keyboard.GetState().IsKeyDown(Keys.Escape);
+        private bool RestartRequested => Keyboard.GetState().IsKeyDown(Keys.R);
+        private bool EnoughWallsRemoved => CurrentFloors <= 0;
+        
+        public RoomGenerator()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
@@ -63,17 +69,23 @@ namespace RoomGenerator
         {
             base.Update(gameTime);
             
-            //Handle input
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed 
-                || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (ExitRequested)
                 Exit();
 
-            if (Keyboard.GetState().IsKeyDown(Keys.R))
+            if (RestartRequested)
                 Reset();
+            
+            Console.WriteLine($"Number floors created: {MaxFloors - CurrentFloors}, " +
+                              $"Number Eaters: {eaters.Count}");
+
+            PrintTileCount();
+            
+            if (EnoughWallsRemoved)
+                return;
 
             foreach (var eater in eaters)
             {
-                eater.Move();
+                eater.TryMove();
             }
 
             foreach (var eater in eatersAccumulator)
@@ -81,11 +93,6 @@ namespace RoomGenerator
                 eaters.Add(eater);
             }
             eatersAccumulator.Clear();
-
-            Console.WriteLine($"Number floors created: {MaxFloors - CurrentFloors}, " +
-                              $"Number Eaters: {eaters.Count}");
-
-            PrintTileCount();
         }
 
         private void PrintTileCount()
@@ -162,9 +169,7 @@ namespace RoomGenerator
             CurrentFloors = MaxFloors;
             eaters.Clear();
             
-            eaters.Add(new Eater(new Vector2(0, 0), 
-                new Vector2(MapSize / 2, MapSize / 2)));
-            eaters[0].GenerateDirection();
+            eaters.Add(new Eater(new Vector2(MapSize / 2, MapSize / 2)));
             eaters[0].AddEater += AddEater;
         }
 
@@ -173,7 +178,7 @@ namespace RoomGenerator
         /// </summary>
         private void AddEater(Vector2 startPosition)
         {
-            Eater eater = new Eater(new Vector2(0, 0), startPosition);
+            Eater eater = new Eater(startPosition);
             eater.GenerateDirection();
             eater.AddEater += AddEater; //Subscribe new eater to this method.
             
