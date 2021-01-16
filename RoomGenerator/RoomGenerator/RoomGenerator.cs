@@ -7,17 +7,18 @@ using Microsoft.Xna.Framework.Input;
 
 namespace RoomGenerator
 {
-    public class RoomGenerator : Game
+    
+    public enum TileType
     {
-        public enum TileType
-        {
-            Floor,
-            Wall
-        }
-
+        Floor,
+        Wall
+    }
+    
+    public class RoomGenerator : Game, IRoomGenerator
+    {
         //Variables that are accessed by the eater class.
-        public static TileType[,] TileMap { get; set; }
-        public static int CurrentFloors = MaxFloors;
+        public TileType[,] TileMap { get; set; }
+        public int CurrentFloors { get; set; } = MaxFloors;
         public const int MapSize = 100; //The square dimensions of the tile map in terms of tiles.
         
         private const int MaxFloors = 1200;
@@ -79,12 +80,13 @@ namespace RoomGenerator
                               $"Number Eaters: {eaters.Count}");
 
             PrintTileCount();
-            
-            if (EnoughWallsRemoved)
-                return;
 
             foreach (var eater in eaters)
             {
+                //End condition check placed here to ensure too many walls are not removed.
+                if (EnoughWallsRemoved)
+                    return;
+                
                 eater.TryMove();
             }
 
@@ -93,22 +95,6 @@ namespace RoomGenerator
                 eaters.Add(eater);
             }
             eatersAccumulator.Clear();
-        }
-
-        private void PrintTileCount()
-        {
-            int trueCount = 0;
-
-            for (int i = 0; i < TileMap.GetLength(0); i++)
-            {
-                for (int j = 0; j < TileMap.GetLength(1); j++)
-                {
-                    if (TileMap[i, j] == TileType.Floor)
-                        trueCount++;
-                }
-            }
-
-            Console.WriteLine($"True Count: {trueCount}");
         }
 
         protected override void Draw(GameTime gameTime)
@@ -155,6 +141,33 @@ namespace RoomGenerator
             spriteBatch.End();
         }
 
+        public Boolean IsAvailableToMove(Vector2 position)
+        {
+            if (position.X < 0 || position.Y < 0 
+                               || position.X > MapSize - 1 || position.Y > MapSize - 1)
+            {
+                return false;
+            }
+
+            return true;
+        }
+        
+        private void PrintTileCount()
+        {
+            int trueCount = 0;
+
+            for (int i = 0; i < TileMap.GetLength(0); i++)
+            {
+                for (int j = 0; j < TileMap.GetLength(1); j++)
+                {
+                    if (TileMap[i, j] == TileType.Floor)
+                        trueCount++;
+                }
+            }
+
+            Console.WriteLine($"True Count: {trueCount}");
+        }
+
         private void Reset()
         {
             //Set all tiles back to wall.
@@ -169,7 +182,7 @@ namespace RoomGenerator
             CurrentFloors = MaxFloors;
             eaters.Clear();
             
-            eaters.Add(new Eater(new Vector2(MapSize / 2, MapSize / 2)));
+            eaters.Add(new Eater(new Vector2(MapSize / 2, MapSize / 2), this));
             eaters[0].AddEater += AddEater;
         }
 
@@ -178,7 +191,7 @@ namespace RoomGenerator
         /// </summary>
         private void AddEater(Vector2 startPosition)
         {
-            Eater eater = new Eater(startPosition);
+            Eater eater = new Eater(startPosition, this);
             eater.GenerateDirection();
             eater.AddEater += AddEater; //Subscribe new eater to this method.
             

@@ -11,12 +11,14 @@ namespace RoomGenerator
 
         private Random random;
         private const int SpawnEaterChance = 400; //Higher value = less likely to spawn another.
+        private IRoomGenerator roomGenerator;
 
-        public Eater(Vector2 position)
+        public Eater(Vector2 position, IRoomGenerator roomGenerator)
         {
             GenerateDirection();
             Position = position;
             random = new Random();
+            this.roomGenerator = roomGenerator;
         }
 
         /// <summary>
@@ -25,30 +27,35 @@ namespace RoomGenerator
         public void TryMove()
         {
             var newPos = Position + Direction;
-
-            //Invalid direction, change direction and return.
-            if (newPos.X < 0 || newPos.Y < 0 
-                             || newPos.X > RoomGenerator.MapSize - 1 || newPos.Y > RoomGenerator.MapSize - 1)
+            if (!roomGenerator.IsAvailableToMove(newPos))
             {
                 GenerateDirection();
                 return;
             }
 
-            Position = newPos;
-            
-            if (RoomGenerator.TileMap[(int) Position.X, (int) Position.Y] != RoomGenerator.TileType.Floor)
-            {
-                RoomGenerator.TileMap[(int) Position.X, (int) Position.Y] = RoomGenerator.TileType.Floor;
-                RoomGenerator.CurrentFloors--;
-            }
+            MoveTo(newPos);
+            TrySpawnEater();
+            GenerateDirection();
+        }
 
+        private void TrySpawnEater()
+        {
             int genNewEater = random.Next(SpawnEaterChance);
             if (genNewEater == 0) // 1/SpawnEaterChance of spawning new eater.
             {
-                AddEater?.Invoke(Position); 
+                AddEater?.Invoke(Position);
             }
-            
-            GenerateDirection();
+        }
+
+        private void MoveTo(Vector2 newPos)
+        {
+            Position = newPos;
+
+            if (roomGenerator.TileMap[(int) Position.X, (int) Position.Y] != TileType.Floor)
+            {
+                roomGenerator.TileMap[(int) Position.X, (int) Position.Y] = TileType.Floor;
+                roomGenerator.CurrentFloors--;
+            }
         }
 
         /// <summary>
