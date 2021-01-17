@@ -9,7 +9,7 @@ namespace RoomGenerator
         public Vector2 Position { get; private set; }
         public Boolean HasChild { get; set; }
 
-        private Random random = new Random();
+        private readonly Random random = new Random();
         private const int SpawnEaterChance = 400; //Higher value = less likely to spawn another.
         private IRoomGenerator roomGenerator;
 

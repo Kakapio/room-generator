@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace RoomGenerator
 {
-    
     public enum TileType
     {
         Floor,
@@ -18,7 +16,7 @@ namespace RoomGenerator
     public class RoomGenerator : Game, IRoomGenerator
     {
         //Variables that are accessed by the eater class.
-        public TileType[,] TileMap { get; set; }
+        public TileType[,] TileMap { get; }
         public int CurrentFloors { get; set; } = MaxFloors;
         public const int MapSize = 100; //The square dimensions of the tile map in terms of tiles.
         
@@ -44,7 +42,6 @@ namespace RoomGenerator
 
             TileMap = new TileType[MapSize, MapSize];
             eaters = new List<Eater>();
-            new List<Eater>();
         }
 
         protected override void Initialize()
@@ -81,16 +78,24 @@ namespace RoomGenerator
 
             PrintTileCount();
 
+            if (MoveEaters()) 
+                return;
+
+            AddChildEaters();
+        }
+
+        private bool MoveEaters()
+        {
             foreach (var eater in eaters)
             {
                 //End condition check placed here to ensure too many walls are not removed.
                 if (EnoughWallsRemoved)
-                    return;
-                
+                    return true;
+
                 eater.TryMove();
             }
 
-            AddChildEaters();
+            return false;
         }
 
         protected override void Draw(GameTime gameTime)
@@ -141,7 +146,7 @@ namespace RoomGenerator
         {
             for (int i = 0; i < eaters.Count; i++)
             {
-                if (eaters[i].HasChild == false)
+                if (! eaters[i].HasChild)
                     return;
 
                 eaters.Add(new Eater(eaters[i].Position, this));
