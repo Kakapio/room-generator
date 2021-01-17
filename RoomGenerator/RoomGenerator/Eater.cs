@@ -7,9 +7,9 @@ namespace RoomGenerator
     {
         public Vector2 Direction { get; private set; }
         public Vector2 Position { get; private set; }
-        public event Action<Vector2> AddEater;
+        public Boolean HasChild { get; set; }
 
-        private Random random;
+        private Random random = new Random();
         private const int SpawnEaterChance = 400; //Higher value = less likely to spawn another.
         private IRoomGenerator roomGenerator;
 
@@ -17,7 +17,6 @@ namespace RoomGenerator
         {
             GenerateDirection();
             Position = position;
-            random = new Random();
             this.roomGenerator = roomGenerator;
         }
 
@@ -43,7 +42,7 @@ namespace RoomGenerator
             int genNewEater = random.Next(SpawnEaterChance);
             if (genNewEater == 0) // 1/SpawnEaterChance of spawning new eater.
             {
-                AddEater?.Invoke(Position);
+                HasChild = true;
             }
         }
 
@@ -64,8 +63,7 @@ namespace RoomGenerator
         /// <exception cref="ArgumentException"></exception>
         public void GenerateDirection()
         {
-            Random rand = new Random();
-            int dir = rand.Next(4);
+            int dir = random.Next(4);
 
             switch (dir)
             {

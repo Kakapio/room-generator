@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -25,7 +26,6 @@ namespace RoomGenerator
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
         private List<Eater> eaters;
-        private List<Eater> eatersAccumulator; //Used to ensure an enumeration operation error does not occur.
         private Texture2D floor;
         private Texture2D wall;
         private const int TileSize = 8; //The square dimensions of each tile sprite.
@@ -44,7 +44,7 @@ namespace RoomGenerator
 
             TileMap = new TileType[MapSize, MapSize];
             eaters = new List<Eater>();
-            eatersAccumulator = new List<Eater>();
+            new List<Eater>();
         }
 
         protected override void Initialize()
@@ -90,11 +90,7 @@ namespace RoomGenerator
                 eater.TryMove();
             }
 
-            foreach (var eater in eatersAccumulator)
-            {
-                eaters.Add(eater);
-            }
-            eatersAccumulator.Clear();
+            AddChildEaters();
         }
 
         protected override void Draw(GameTime gameTime)
@@ -140,6 +136,18 @@ namespace RoomGenerator
             spriteBatch.Draw(target, new Rectangle(0, 0, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight), Color.White);
             spriteBatch.End();
         }
+        
+        private void AddChildEaters()
+        {
+            for (int i = 0; i < eaters.Count; i++)
+            {
+                if (eaters[i].HasChild == false)
+                    return;
+
+                eaters.Add(new Eater(eaters[i].Position, this));
+                eaters[i].HasChild = false;
+            }
+        }
 
         public Boolean IsAvailableToMove(Vector2 position)
         {
@@ -183,19 +191,6 @@ namespace RoomGenerator
             eaters.Clear();
             
             eaters.Add(new Eater(new Vector2(MapSize / 2, MapSize / 2), this));
-            eaters[0].AddEater += AddEater;
-        }
-
-        /// <summary>
-        /// Triggered by Eaters to add more eaters to the generator. Allows for generation of separate corridors.
-        /// </summary>
-        private void AddEater(Vector2 startPosition)
-        {
-            Eater eater = new Eater(startPosition, this);
-            eater.GenerateDirection();
-            eater.AddEater += AddEater; //Subscribe new eater to this method.
-            
-            eatersAccumulator.Add(eater);
         }
     }
 }
